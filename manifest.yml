@@ -1,0 +1,19 @@
+modules:
+  jira:projectPage:
+    - key: roadmap-main
+      resource: main
+      title: Roadmap Forecaster Pro
+      icon: https://developer.atlassian.com/platform/forge/images/icons/chart-icon.svg
+
+resources:
+  - key: main
+    path: static/roadmap-app/build
+
+app:
+  runtime:
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/f07973b4-7d19-4aed-8a09-8f1b6d18924a
+
+permissions:
+  scopes:
+    - read:jira-work
