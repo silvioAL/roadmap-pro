@@ -451,20 +451,28 @@ function App() {
 
         setLoading(true);
         try {
+            console.log('=== Importando do Jira ===');
+            console.log('Níveis configurados:', config.hierarchyConfig.levels);
+
             const result = await jiraService.searchIssues(
                 config.hierarchyConfig.levels,
                 200
             );
+
+            console.log('Resultado da busca:', result);
 
             if (result.success) {
                 setJiraIssues(result.issues);
                 setShowImportModal(true);
                 showToast(`✅ ${result.issues.length} issues encontradas`, 'success');
             } else {
-                showToast('❌ Erro ao buscar issues', 'error');
+                // Mostrar erro detalhado
+                console.error('Erro na busca:', result.error);
+                showToast(`❌ Erro: ${result.error || 'Erro desconhecido'}`, 'error');
             }
         } catch (error) {
-            showToast('❌ Erro ao importar', 'error');
+            console.error('Exceção ao importar:', error);
+            showToast(`❌ Exceção: ${error.message}`, 'error');
         }
         setLoading(false);
     };
@@ -1038,34 +1046,56 @@ function App() {
                             <h3>Configure o Nível Hierárquico</h3>
                             <p>Selecione qual nível de itens você deseja trabalhar no roadmap:</p>
                             <div className="hierarchy-options">
-                                <button
-                                    className="hierarchy-option"
-                                    onClick={() => {
-                                        setConfig(prev => ({
-                                            ...prev,
-                                            hierarchyConfig: { enabled: true, levels: ['Initiative'] }
-                                        }));
-                                        showToast('✅ Nível definido: Iniciativas', 'success');
-                                    }}
-                                >
-                                    <span className="option-icon">🎯</span>
-                                    <span className="option-title">Iniciativas</span>
-                                    <span className="option-desc">Grandes objetivos estratégicos</span>
-                                </button>
-                                <button
-                                    className="hierarchy-option"
-                                    onClick={() => {
-                                        setConfig(prev => ({
-                                            ...prev,
-                                            hierarchyConfig: { enabled: true, levels: ['Epic'] }
-                                        }));
-                                        showToast('✅ Nível definido: Épicos', 'success');
-                                    }}
-                                >
-                                    <span className="option-icon">📦</span>
-                                    <span className="option-title">Épicos</span>
-                                    <span className="option-desc">Funcionalidades e entregas</span>
-                                </button>
+                                {/* Botão Iniciativas - busca dinamicamente */}
+                                {(() => {
+                                    const initiative = issueTypes.find(t => t.hierarchyLevel === 2);
+                                    if (!initiative) return null;
+                                    return (
+                                        <button
+                                            className="hierarchy-option"
+                                            onClick={() => {
+                                                setConfig(prev => ({
+                                                    ...prev,
+                                                    hierarchyConfig: { enabled: true, levels: [initiative.name] }
+                                                }));
+                                                showToast(`✅ Nível definido: ${initiative.name}`, 'success');
+                                            }}
+                                        >
+                                            <span className="option-icon">🎯</span>
+                                            <span className="option-title">{initiative.name}</span>
+                                            <span className="option-desc">Grandes objetivos estratégicos</span>
+                                        </button>
+                                    );
+                                })()}
+
+                                {/* Botão Épicos - busca dinamicamente */}
+                                {(() => {
+                                    const epic = issueTypes.find(t => t.hierarchyLevel === 1);
+                                    if (!epic) return null;
+                                    return (
+                                        <button
+                                            className="hierarchy-option"
+                                            onClick={() => {
+                                                setConfig(prev => ({
+                                                    ...prev,
+                                                    hierarchyConfig: { enabled: true, levels: [epic.name] }
+                                                }));
+                                                showToast(`✅ Nível definido: ${epic.name}`, 'success');
+                                            }}
+                                        >
+                                            <span className="option-icon">📦</span>
+                                            <span className="option-title">{epic.name}</span>
+                                            <span className="option-desc">Funcionalidades e entregas</span>
+                                        </button>
+                                    );
+                                })()}
+
+                                {/* Fallback se não encontrar tipos por hierarquia */}
+                                {!issueTypes.some(t => t.hierarchyLevel >= 1) && issueTypes.length > 0 && (
+                                    <p style={{color: '#64748b', fontSize: '14px'}}>
+                                        Use a configuração avançada para selecionar os tipos de issue.
+                                    </p>
+                                )}
                             </div>
                             <button
                                 className="btn btn-link"
